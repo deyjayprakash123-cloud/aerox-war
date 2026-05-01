@@ -34,7 +34,7 @@ interface RumbleResponse {
 
 // ── In-memory cache (survives across requests in the same process) ──
 const cache = new Map<string, { data: RepoStats; expires: number }>();
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const CACHE_TTL = 60 * 1000; // 1 minute
 
 function getCached(key: string): RepoStats | null {
   const entry = cache.get(key);
@@ -153,6 +153,7 @@ async function fetchRepoGraphQL(
       query: REPO_QUERY,
       variables: { owner, name: repo, since: oneWeekAgo },
     }),
+    cache: "no-store",
   });
 
   if (gqlRes.ok) {
@@ -198,7 +199,7 @@ async function fetchRepoREST(
   // Call 1: Basic repo info (includes stars, forks, language, size, open_issues)
   const repoRes = await fetch(
     `https://api.github.com/repos/${owner}/${repo}`,
-    { headers }
+    { headers, cache: "no-store" }
   );
 
   if (!repoRes.ok) {
@@ -241,7 +242,7 @@ async function fetchRepoREST(
   try {
     const commitsRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/commits?since=${oneWeekAgo}&per_page=100`,
-      { headers }
+      { headers, cache: "no-store" }
     );
     if (commitsRes.ok) {
       const commits = await commitsRes.json();

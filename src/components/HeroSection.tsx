@@ -237,6 +237,20 @@ export default function HeroSection() {
           </span>
           <div className="h-px flex-1 max-w-20 bg-gradient-to-l from-transparent to-neon-cyan/30" />
         </div>
+
+        {/* External Link */}
+        <div className="mt-8 text-center pointer-events-auto">
+          <a
+            href="https://aeroxaura.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-neon-cyan/50 transition-all duration-300"
+            style={{ fontFamily: "var(--font-mono)" }}
+          >
+            <span className="text-white/60 text-xs tracking-wider">Want a single-repo 3D visualization?</span>
+            <span className="text-neon-cyan text-sm font-bold shadow-neon-cyan drop-shadow-md">render your repo aura ✨</span>
+          </a>
+        </div>
       </div>
 
       {/* Scroll indicator */}
