@@ -17,29 +17,29 @@ interface Feature {
 
 const features: Feature[] = [
   {
-    title: "Real-time Velocity",
+    title: "Code Complexity",
     description:
-      "Track commit frequency, merge speed, and deployment cadence. Measure the true pace of development.",
-    value: 87,
-    label: "VELOCITY",
+      "A heavyweight metric analyzing the sheer scale, depth, and Total Lines of Code (40% Weight).",
+    value: 85,
+    label: "COMPLEX",
     color: "orange",
+    icon: "🧠",
+  },
+  {
+    title: "Commit Velocity",
+    description:
+      "Evaluates deployment speed, commit frequency, and the raw momentum of the repository (30% Weight).",
+    value: 92,
+    label: "VELOCITY",
+    color: "cyan",
     icon: "⚡",
   },
   {
-    title: "Contributor Stamina",
+    title: "Bug Stability",
     description:
-      "Analyze contributor retention, code review turnaround, and sustained engagement over time.",
-    value: 92,
-    label: "STAMINA",
-    color: "cyan",
-    icon: "💪",
-  },
-  {
-    title: "Code Defense",
-    description:
-      "Evaluate test coverage, security posture, dependency health, and vulnerability resilience.",
+      "Calculates the ratio of closed vs open issues to determine team responsiveness and code health (30% Weight).",
     value: 78,
-    label: "DEFENSE",
+    label: "STABILITY",
     color: "mixed",
     icon: "🛡️",
   },
@@ -261,11 +261,10 @@ export default function FeaturesSection() {
 
           <div className="space-y-6">
             {[
-              { label: "Commit Frequency", value: 85, color: "#ff6a00" },
-              { label: "PR Merge Speed", value: 72, color: "#00e5ff" },
-              { label: "Test Coverage", value: 91, color: "#ff9a40" },
-              { label: "Issue Resolution", value: 68, color: "#60f0ff" },
-              { label: "Code Complexity", value: 54, color: "#ff6a00" },
+              { label: "Code Complexity (Size & Depth)", value: 40, color: "#ff6a00" },
+              { label: "Commit Velocity (Momentum)", value: 30, color: "#00e5ff" },
+              { label: "Bug Stability (Issue Ratio)", value: 30, color: "#00ff88" },
+              { label: "Popularity (Stars/Forks)", value: 0, color: "#ff2a2a" },
             ].map((bar, i) => (
               <div key={i}>
                 <div className="flex justify-between mb-2">
@@ -308,6 +307,12 @@ export default function FeaturesSection() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+            <p className="text-[10px] text-white/40 uppercase tracking-widest" style={{ fontFamily: "var(--font-mono)" }}>
+              * Popularity metrics like GitHub Stars are explicitly excluded (0% weight) to ensure a pure test of technical engineering merit.
+            </p>
           </div>
         </div>
       </div>

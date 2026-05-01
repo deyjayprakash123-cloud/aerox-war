@@ -258,22 +258,24 @@ async function fetchRepoREST(
   const issueResolution =
     openIssues === 0 ? (closedIssues > 0 ? 10 : 1) : Math.min(closedIssues / openIssues, 10);
 
-  const S = repoData.stargazers_count || 0;
-  const Cv = commitVelocity;
-  const Ir = issueResolution;
-  const powerScore = Math.round((S * 0.2 + Cv * 0.5 + Ir * 0.3) * 100) / 100;
-
   const repoSizeKb = repoData.size || 0;
+  const complexityScore = Math.log10((repoSizeKb * 25) || 1) * 20; // Logarithmic scaling for codebase size
+  const healthScore = issueResolution * 10; // Bug resolution health
+  const velocityScore = Math.min(commitVelocity * 1.5, 100); // Code shipment speed
+
+  // Purely technical, merit-based power score (ignores popularity/stars)
+  const powerScore = Math.round((complexityScore * 0.4) + (velocityScore * 0.3) + (healthScore * 0.3));
+
 
   const stats: RepoStats = {
     name: repoData.name,
     fullName: repoData.full_name,
     avatarUrl: repoData.owner?.avatar_url || "",
-    stars: S,
-    commitVelocity: Cv,
-    issueResolution: Math.round(Ir * 100) / 100,
+    stars: repoData.stargazers_count || 0,
+    commitVelocity,
+    issueResolution: Math.round(issueResolution * 100) / 100,
     totalLinesOfCode: Math.round(repoSizeKb * 25),
-    activeContributors: Math.max(1, Math.round(Math.sqrt(S) * 0.5)), // estimate
+    activeContributors: Math.max(1, Math.round(Math.sqrt(repoData.stargazers_count || 0) * 0.5)), // estimate
     openIssues,
     closedIssues,
     powerScore,
@@ -318,19 +320,21 @@ function buildStats(r: Record<string, unknown>): RepoStats {
   // Owner avatar
   const ownerObj = r.owner as { avatarUrl: string } | null;
 
-  // Power Score
-  const S = stars;
-  const Cv = commitVelocity;
-  const Ir = issueResolution;
-  const powerScore = Math.round((S * 0.2 + Cv * 0.5 + Ir * 0.3) * 100) / 100;
+  // Complexity based on codebase size
+  const complexityScore = Math.log10((diskUsage * 25) || 1) * 20; // Logarithmic scaling
+  const healthScore = issueResolution * 10; // Bug resolution health
+  const velocityScore = Math.min(commitVelocity * 1.5, 100); // Code shipment speed
+
+  // Purely technical, merit-based power score (ignores popularity/stars)
+  const powerScore = Math.round((complexityScore * 0.4) + (velocityScore * 0.3) + (healthScore * 0.3));
 
   return {
     name: r.name as string,
     fullName: r.nameWithOwner as string,
     avatarUrl: ownerObj?.avatarUrl || "",
-    stars: S,
-    commitVelocity: Cv,
-    issueResolution: Math.round(Ir * 100) / 100,
+    stars,
+    commitVelocity,
+    issueResolution: Math.round(issueResolution * 100) / 100,
     totalLinesOfCode: Math.round(diskUsage * 25),
     activeContributors,
     openIssues,

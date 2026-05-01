@@ -15,16 +15,12 @@ const BattleHUD = dynamic(
   () => import("@/components/arena/BattleHUD"),
   { ssr: false }
 );
-const TownScene = dynamic(
-  () => import("@/components/town/TownScene"),
-  { ssr: false }
-);
-const TownHUD = dynamic(
-  () => import("@/components/town/TownHUD"),
+const GraphScene = dynamic(
+  () => import("@/components/battle/GraphScene"),
   { ssr: false }
 );
 
-type ViewMode = "arena" | "town1" | "town2";
+type ViewMode = "arena" | "analysis";
 
 /* ═══════════════════════════════════════════════════════
    Loading Screen
@@ -355,8 +351,7 @@ function ViewToggle({
 }) {
   const options: { key: ViewMode; label: string; icon: string }[] = [
     { key: "arena", label: "ARENA", icon: "⚔️" },
-    { key: "town1", label: f1Name, icon: "🏙️" },
-    { key: "town2", label: f2Name, icon: "🏙️" },
+    { key: "analysis", label: "ANALYSIS", icon: "📊" },
   ];
 
   return (
@@ -386,10 +381,6 @@ function ViewToggle({
 function BattleContent() {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<RumbleResult | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [town1Data, setTown1Data] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [town2Data, setTown2Data] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRateLimit, setIsRateLimit] = useState(false);
@@ -435,28 +426,8 @@ function BattleContent() {
 
         setLoadStatus("Computing AEROX-POWER-SCORE...");
         const data: RumbleResult = await res.json();
-        await new Promise((r) => setTimeout(r, 400));
-
-        // Fetch town data for both repos in parallel
-        setLoadStatus("Surveying town blueprints...");
-        const [t1Res, t2Res] = await Promise.all([
-          fetch("/api/town", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ repo: repo1 }),
-          }),
-          fetch("/api/town", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ repo: repo2 }),
-          }),
-        ]);
-
-        if (t1Res.ok) setTown1Data(await t1Res.json());
-        if (t2Res.ok) setTown2Data(await t2Res.json());
-
         setLoadStatus("Deploying to arena...");
-        await new Promise((r) => setTimeout(r, 300));
+        await new Promise((r) => setTimeout(r, 400));
 
         setResult(data);
         setLoading(false);
@@ -509,56 +480,10 @@ function BattleContent() {
         </>
       )}
 
-      {/* Town View — Fighter 1 */}
-      {viewMode === "town1" && town1Data && (
-        <>
-          <TownScene townData={town1Data} fighterColor="#ff6a00" />
-          <TownHUD
-            townData={town1Data}
-            fighterLabel={result.fighter1.name}
-            fighterColor="#ff6a00"
-            onBack={handleBackToArena}
-          />
-        </>
+      {/* 3D Analysis Graph View */}
+      {viewMode === "analysis" && (
+        <GraphScene fighter1={result.fighter1} fighter2={result.fighter2} />
       )}
-
-      {/* Town View — Fighter 2 */}
-      {viewMode === "town2" && town2Data && (
-        <>
-          <TownScene townData={town2Data} fighterColor="#00e5ff" />
-          <TownHUD
-            townData={town2Data}
-            fighterLabel={result.fighter2.name}
-            fighterColor="#00e5ff"
-            onBack={handleBackToArena}
-          />
-        </>
-      )}
-
-      {/* Fallback if town data failed */}
-      {(viewMode === "town1" && !town1Data) ||
-      (viewMode === "town2" && !town2Data) ? (
-        <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ background: "#0a0a0f" }}
-        >
-          <div className="hud-card text-center">
-            <p
-              style={{
-                fontFamily: "var(--font-heading)",
-                fontSize: "0.9rem",
-                color: "rgba(255,255,255,0.5)",
-                marginBottom: "12px",
-              }}
-            >
-              Town data unavailable for this repo
-            </p>
-            <button onClick={handleBackToArena} className="hud-back-btn">
-              ← BACK TO ARENA
-            </button>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
