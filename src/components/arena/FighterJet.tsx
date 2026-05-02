@@ -83,87 +83,118 @@ export default function FighterJet({
   const direction = side === "left" ? 1 : -1;
   const col = useMemo(() => new THREE.Color(color), [color]);
 
-  // ── Fuselage geometry (custom) ──
+  // ── Fuselage geometry — sleek angular stealth shape ──
   const fuselageGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    const hw = 0.25; // half-width
+    const hw = 0.22;
     const len = fuselageLength;
-
-    // Nose cone taper
-    shape.moveTo(0, len * 0.5);
-    shape.lineTo(hw * 0.3, len * 0.3);
-    shape.lineTo(hw, len * 0.1);
-    shape.lineTo(hw, -len * 0.35);
-    // Tail taper
-    shape.lineTo(hw * 0.6, -len * 0.5);
-    shape.lineTo(-hw * 0.6, -len * 0.5);
-    shape.lineTo(-hw, -len * 0.35);
-    shape.lineTo(-hw, len * 0.1);
-    shape.lineTo(-hw * 0.3, len * 0.3);
+    // Sharp needle nose → angular midsection → tapered exhaust
+    shape.moveTo(0, len * 0.55);
+    shape.lineTo(hw * 0.15, len * 0.42);
+    shape.lineTo(hw * 0.5, len * 0.28);
+    shape.lineTo(hw * 1.1, len * 0.08);
+    shape.lineTo(hw * 1.15, -len * 0.05);
+    shape.lineTo(hw * 0.9, -len * 0.28);
+    shape.lineTo(hw * 0.7, -len * 0.42);
+    shape.lineTo(hw * 0.45, -len * 0.52);
+    shape.lineTo(-hw * 0.45, -len * 0.52);
+    shape.lineTo(-hw * 0.7, -len * 0.42);
+    shape.lineTo(-hw * 0.9, -len * 0.28);
+    shape.lineTo(-hw * 1.15, -len * 0.05);
+    shape.lineTo(-hw * 1.1, len * 0.08);
+    shape.lineTo(-hw * 0.5, len * 0.28);
+    shape.lineTo(-hw * 0.15, len * 0.42);
     shape.closePath();
-
     const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: 0.15,
+      depth: 0.18,
       bevelEnabled: true,
-      bevelThickness: 0.05,
-      bevelSize: 0.05,
-      bevelSegments: 1,
+      bevelThickness: 0.06,
+      bevelSize: 0.06,
+      bevelSegments: 2,
     });
     geo.center();
     return geo;
   }, [fuselageLength]);
 
-  // ── Wing geometry ──
-  const wingGeo = useMemo(() => {
+  // ── Canard fins (small forward wings) ──
+  const canardGeo = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const hw = wingspan / 2;
-    const wDepth = fuselageLength * 0.35;
-
-    // Delta wing shape (one side)
-    const vertices = new Float32Array([
-      // Right wing
-      0.2, 0, 0,
-      hw, 0, wDepth * 0.3,
-      0.3, 0, -wDepth,
-      // Left wing
-      -0.2, 0, 0,
-      -hw, 0, wDepth * 0.3,
-      -0.3, 0, -wDepth,
+    const cw = wingspan * 0.28;
+    const cl = fuselageLength * 0.12;
+    const verts = new Float32Array([
+      0.15, 0.02, fuselageLength * 0.22,
+      cw, 0.04, fuselageLength * 0.22 - cl * 0.3,
+      0.2, 0.02, fuselageLength * 0.22 - cl,
+      -0.15, 0.02, fuselageLength * 0.22,
+      -cw, 0.04, fuselageLength * 0.22 - cl * 0.3,
+      -0.2, 0.02, fuselageLength * 0.22 - cl,
     ]);
-
-    const indices = [
-      0, 1, 2,  // right wing
-      3, 5, 4,  // left wing (reversed normal)
-    ];
-
-    geo.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-    geo.setIndex(indices);
+    geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    geo.setIndex([0, 1, 2, 3, 5, 4]);
     geo.computeVertexNormals();
     return geo;
   }, [wingspan, fuselageLength]);
 
-  // ── Tail fin geometry ──
+  // ── Main wings — cranked delta with notched trailing edge ──
+  const wingGeo = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const hw = wingspan / 2;
+    const wd = fuselageLength * 0.38;
+    const verts = new Float32Array([
+      // Right wing (5 verts for complex shape)
+      0.22, 0, wd * 0.15,
+      hw * 0.55, -0.02, wd * 0.22,
+      hw, -0.04, wd * 0.05,
+      hw * 0.75, -0.03, -wd * 0.5,
+      0.25, 0, -wd * 0.85,
+      // Left wing
+      -0.22, 0, wd * 0.15,
+      -hw * 0.55, -0.02, wd * 0.22,
+      -hw, -0.04, wd * 0.05,
+      -hw * 0.75, -0.03, -wd * 0.5,
+      -0.25, 0, -wd * 0.85,
+    ]);
+    geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    geo.setIndex([0,1,4, 1,3,4, 1,2,3, 5,9,6, 6,9,8, 6,8,7]);
+    geo.computeVertexNormals();
+    return geo;
+  }, [wingspan, fuselageLength]);
+
+  // ── Dual canted vertical stabilizers ──
   const tailGeo = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const h = fuselageLength * 0.2;
-    const vertices = new Float32Array([
-      0, 0, -fuselageLength * 0.35,
-      0, h, -fuselageLength * 0.45,
-      0, 0, -fuselageLength * 0.5,
+    const h = fuselageLength * 0.22;
+    const offset = 0.18;
+    const verts = new Float32Array([
+      // Right stabilizer (canted outward)
+      offset, 0, -fuselageLength * 0.32,
+      offset + 0.08, h, -fuselageLength * 0.44,
+      offset + 0.04, 0, -fuselageLength * 0.5,
+      // Left stabilizer
+      -offset, 0, -fuselageLength * 0.32,
+      -offset - 0.08, h, -fuselageLength * 0.44,
+      -offset - 0.04, 0, -fuselageLength * 0.5,
     ]);
-    geo.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
-    geo.setIndex([0, 1, 2]);
+    geo.setAttribute("position", new THREE.BufferAttribute(verts, 3));
+    geo.setIndex([0, 1, 2, 3, 5, 4]);
     geo.computeVertexNormals();
     return geo;
   }, [fuselageLength]);
 
-  // ── Engine trail particles ──
+  // ── Cockpit canopy ──
+  const cockpitGeo = useMemo(() => {
+    const geo = new THREE.SphereGeometry(0.14, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55);
+    return geo;
+  }, []);
+
+  // ── Engine trail particles (denser, dual-stream) ──
   const trailPositions = useMemo(() => {
-    const count = 80;
+    const count = 160;
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 0.15;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 0.15;
+      const stream = i < count / 2 ? 0.18 : -0.18;
+      positions[i * 3] = stream + (Math.random() - 0.5) * 0.1;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 0.1;
       positions[i * 3 + 2] =
         -fuselageLength * 0.5 - Math.random() * trailLength;
     }
@@ -171,10 +202,10 @@ export default function FighterJet({
   }, [fuselageLength, trailLength]);
 
   const trailSizes = useMemo(() => {
-    const count = 80;
+    const count = 160;
     const sizes = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      sizes[i] = Math.random() * 3 + 1;
+      sizes[i] = Math.random() * 4 + 1.5;
     }
     return sizes;
   }, []);
@@ -430,68 +461,119 @@ export default function FighterJet({
       position={position}
       rotation={[0, side === "left" ? 0 : Math.PI, 0]}
     >
-      {/* Fuselage */}
+      {/* ── Primary Fuselage Hull ── */}
       <mesh geometry={fuselageGeo} rotation={[Math.PI / 2, 0, 0]}>
         <meshStandardMaterial
-          color={color}
-          metalness={0.8}
-          roughness={0.3}
+          color="#1a1a2e"
+          metalness={0.92}
+          roughness={0.18}
+          emissive={color}
+          emissiveIntensity={0.08}
+        />
+      </mesh>
+
+      {/* ── Fuselage accent stripe (thinner, glowing) ── */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} scale={[0.85, 0.85, 1.02]}>
+        <boxGeometry args={[0.02, fuselageLength * 0.7, 0.22]} />
+        <meshBasicMaterial color={color} transparent opacity={0.6} />
+      </mesh>
+
+      {/* ── Canard Fins ── */}
+      <mesh geometry={canardGeo}>
+        <meshStandardMaterial
+          color="#1a1a2e"
+          metalness={0.85}
+          roughness={0.2}
           emissive={color}
           emissiveIntensity={0.15}
+          side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Wings */}
+      {/* ── Main Wings ── */}
       <mesh geometry={wingGeo}>
         <meshStandardMaterial
-          color={color}
-          metalness={0.7}
-          roughness={0.35}
+          color="#1a1a2e"
+          metalness={0.88}
+          roughness={0.2}
           emissive={color}
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.06}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Tail fin */}
+      {/* ── Wing edge glow strips ── */}
+      {[1, -1].map((s) => (
+        <mesh key={s} position={[s * wingspan * 0.35, -0.02, -fuselageLength * 0.08]} rotation={[0, s * 0.15, s * -0.04]}>
+          <boxGeometry args={[wingspan * 0.32, 0.008, 0.015]} />
+          <meshBasicMaterial color={color} transparent opacity={0.5} />
+        </mesh>
+      ))}
+
+      {/* ── Dual Vertical Stabilizers ── */}
       <mesh geometry={tailGeo}>
         <meshStandardMaterial
-          color={color}
-          metalness={0.6}
-          roughness={0.4}
+          color="#1a1a2e"
+          metalness={0.85}
+          roughness={0.22}
           emissive={color}
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.12}
           side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Engine nacelles (two glowing spheres at tail) */}
-      <mesh position={[0.2, 0, -fuselageLength * 0.42]}>
-        <sphereGeometry args={[0.1, 8, 8]} />
-        <meshBasicMaterial color={color} transparent opacity={0.6 + engineIntensity * 0.4} />
-      </mesh>
-      <mesh position={[-0.2, 0, -fuselageLength * 0.42]}>
-        <sphereGeometry args={[0.1, 8, 8]} />
-        <meshBasicMaterial color={color} transparent opacity={0.6 + engineIntensity * 0.4} />
+      {/* ── Cockpit Canopy (holographic tint) ── */}
+      <mesh geometry={cockpitGeo} position={[0, 0.1, fuselageLength * 0.2]} rotation={[-0.2, 0, 0]}>
+        <meshPhysicalMaterial
+          color={color}
+          metalness={0.1}
+          roughness={0.05}
+          transmission={0.6}
+          thickness={0.5}
+          emissive={color}
+          emissiveIntensity={0.3}
+          transparent
+          opacity={0.7}
+          side={THREE.DoubleSide}
+        />
       </mesh>
 
-      {/* Engine point lights */}
-      <pointLight
-        color={color}
-        intensity={2 + engineIntensity * 8}
-        distance={5 + trailLength}
-        position={[0, 0, -fuselageLength * 0.45]}
-      />
+      {/* ── Engine Nacelles (angular intake pods) ── */}
+      {[0.2, -0.2].map((x) => (
+        <group key={x} position={[x, -0.02, -fuselageLength * 0.38]}>
+          <mesh>
+            <boxGeometry args={[0.1, 0.08, 0.25]} />
+            <meshStandardMaterial color="#0d0d1a" metalness={0.95} roughness={0.15} />
+          </mesh>
+          {/* Intake glow ring */}
+          <mesh position={[0, 0, 0.13]}>
+            <torusGeometry args={[0.045, 0.012, 8, 16]} />
+            <meshBasicMaterial color={color} transparent opacity={0.7 + engineIntensity * 0.3} />
+          </mesh>
+          {/* Exhaust nozzle glow */}
+          <mesh position={[0, 0, -0.13]}>
+            <circleGeometry args={[0.04, 12]} />
+            <meshBasicMaterial color={color} transparent opacity={0.5 + engineIntensity * 0.5} />
+          </mesh>
+        </group>
+      ))}
 
-      {/* Engine trail */}
+      {/* ── Engine point lights (dual) ── */}
+      <pointLight color={color} intensity={3 + engineIntensity * 10} distance={6 + trailLength} position={[0.2, 0, -fuselageLength * 0.5]} />
+      <pointLight color={color} intensity={3 + engineIntensity * 10} distance={6 + trailLength} position={[-0.2, 0, -fuselageLength * 0.5]} />
+
+      {/* ── Nose tip glow ── */}
+      <pointLight color={color} intensity={1.5} distance={3} position={[0, 0.05, fuselageLength * 0.5]} />
+
+      {/* ── Engine Exhaust Trail ── */}
       <TrailPoints trailMat={trailMat} trailPositions={trailPositions} trailSizes={trailSizes} ref={trailRef} />
 
-      {/* Shield bubble */}
+      {/* ── Shield Bubble ── */}
       <mesh ref={shieldRef} material={shieldMat}>
-        <sphereGeometry args={[wingspan * 0.6, 16, 16]} />
+        <sphereGeometry args={[wingspan * 0.6, 24, 24]} />
       </mesh>
 
-      {/* Projectile */}
+      {/* ── Projectile ── */}
       <mesh ref={projectileRef} material={projectileMat} position={[0, 0, fuselageLength * 0.5]}>
         <sphereGeometry args={[0.12, 8, 8]} />
       </mesh>
