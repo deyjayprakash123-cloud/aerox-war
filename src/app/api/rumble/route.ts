@@ -1,13 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { computeFairnessScore, compareFairly } from "@/lib/fairComparison";
 
 /* ═══════════════════════════════════════════════════════
-   AEROX-WAR — RUMBLE API v2
+   AEROX-WAR — RUMBLE API v3 (Fair Comparison Engine)
    
-   Uses GitHub GraphQL API — ONE query per repo instead of 5.
-   Includes in-memory cache (10-min TTL) to avoid repeat calls.
+   Uses GitHub GraphQL API — ONE query per repo.
+   Includes in-memory cache (1-min TTL) for hot data.
    
-   Formula: P = (S × 0.2) + (Cv × 0.5) + (Ir × 0.3)
+   Battle Stats fetched:
+     Vitality     → pushedAt
+     Stamina      → commitHistory (30d)
+     Defense      → vulnerabilityAlerts
+     Efficiency   → closedIssues / totalIssues (90d)
+     Community    → mentionableUsers
+   
+   Fairness Algorithm:
+     Maintainability (60%) = (MergedPRs/TotalPRs)*0.4
+                           + (ClosedBugs/OpenBugs)*0.6
+                           - stalePenalty
+     Community      (30%) = star/fork 24hr growth %
+     Security       (10%) = 1.0 - 0.2 × criticalAlerts
+   
+   Thermal Overload: On 403/429, returns last cached
+   entry as simulatedData + requiresAuth flag.
    ═══════════════════════════════════════════════════════ */
 
 interface RepoStats {
@@ -24,17 +40,42 @@ interface RepoStats {
   powerScore: number;
   language: string;
   forks: number;
+
+  /* ── Battle Stats ── */
+  pushedAt: string;
+  commitHistory30d: number;
+  vulnerabilityAlerts: number;
+  mergedPRs: number;
+  totalPRs: number;
+  openBugs: number;
+  closedBugs: number;
+  mentionableUsers: number;
+  starsToday: number;
+  forksToday: number;
+
+  fairnessScore?: {
+    maintainabilityIndex: number;
+    communityMomentum: number;
+    securityArmor: number;
+    totalFairScore: number;
+    penalties: string[];
+  };
 }
 
 interface RumbleResponse {
   fighter1: RepoStats;
   fighter2: RepoStats;
   winner: "fighter1" | "fighter2" | "draw";
+  fairWinner?: "fighter1" | "fighter2" | "draw";
+  isSimulated?: boolean;
 }
 
 // ── In-memory cache (survives across requests in the same process) ──
 const cache = new Map<string, { data: RepoStats; expires: number }>();
 const CACHE_TTL = 60 * 1000; // 1 minute
+
+// ── Thermal Overload: Last successful rumble result ──
+let lastSuccessfulRumble: RumbleResponse | null = null;
 
 function getCached(key: string): RepoStats | null {
   const entry = cache.get(key);
@@ -72,7 +113,7 @@ function parseGitHubUrl(url: string): { owner: string; repo: string } | null {
 // Priority: user's OAuth token > env GITHUB_TOKEN > unauthenticated
 function getHeaders(userToken?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    "User-Agent": "AEROX-WAR/2.0",
+    "User-Agent": "AEROX-WAR/3.0",
     "Content-Type": "application/json",
   };
 
@@ -87,9 +128,14 @@ function getHeaders(userToken?: string): Record<string, string> {
 // Store the active user token for the current request
 let activeUserToken: string | undefined;
 
-// ── GraphQL query — fetches EVERYTHING in one call ──
+// ── GraphQL query v3 — fetches ALL Battle Stats in one call ──
 const REPO_QUERY = `
-query RepoStats($owner: String!, $name: String!, $since: GitTimestamp!) {
+query RepoStats(
+  $owner: String!,
+  $name: String!,
+  $since7d: GitTimestamp!,
+  $since30d: GitTimestamp!
+) {
   repository(owner: $owner, name: $name) {
     name
     nameWithOwner
@@ -97,13 +143,17 @@ query RepoStats($owner: String!, $name: String!, $since: GitTimestamp!) {
     stargazerCount
     forkCount
     diskUsage
+    pushedAt
     primaryLanguage { name }
     
-    # Commit velocity (last 50 commits, we filter by date client-side)
+    # Commit velocity (last 7 days)
     defaultBranchRef {
       target {
         ... on Commit {
-          history(first: 50, since: $since) {
+          history7d: history(first: 1, since: $since7d) {
+            totalCount
+          }
+          history30d: history(first: 1, since: $since30d) {
             totalCount
           }
         }
@@ -117,6 +167,31 @@ query RepoStats($owner: String!, $name: String!, $since: GitTimestamp!) {
     
     # Closed issues count  
     closedIssues: issues(states: CLOSED) {
+      totalCount
+    }
+    
+    # Open bugs (issues with "bug" label, open)
+    openBugs: issues(states: OPEN, labels: ["bug"]) {
+      totalCount
+    }
+    
+    # Closed bugs (issues with "bug" label, closed)
+    closedBugs: issues(states: CLOSED, labels: ["bug"]) {
+      totalCount
+    }
+    
+    # Pull requests — merged
+    mergedPRs: pullRequests(states: MERGED) {
+      totalCount
+    }
+    
+    # Pull requests — total
+    totalPRs: pullRequests {
+      totalCount
+    }
+    
+    # Vulnerability alerts count
+    vulnerabilityAlerts(first: 1) {
       totalCount
     }
     
@@ -139,9 +214,9 @@ async function fetchRepoGraphQL(
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
-  const oneWeekAgo = new Date(
-    Date.now() - 7 * 24 * 60 * 60 * 1000
-  ).toISOString();
+  const now = Date.now();
+  const oneWeekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const headers = getHeaders(activeUserToken);
 
@@ -151,7 +226,12 @@ async function fetchRepoGraphQL(
     headers,
     body: JSON.stringify({
       query: REPO_QUERY,
-      variables: { owner, name: repo, since: oneWeekAgo },
+      variables: {
+        owner,
+        name: repo,
+        since7d: oneWeekAgo,
+        since30d: thirtyDaysAgo,
+      },
     }),
     cache: "no-store",
   });
@@ -173,6 +253,13 @@ async function fetchRepoGraphQL(
     }
   }
 
+  // Check for rate limit on GraphQL response
+  if (gqlRes.status === 403 || gqlRes.status === 429) {
+    throw new Error(
+      `RATE_LIMIT: GitHub API rate limit exceeded. Add a GITHUB_TOKEN in .env.local for 5,000 requests/hour.`
+    );
+  }
+
   // ── Fallback to REST API if GraphQL fails ──
   // (happens when no token is set — GraphQL requires auth)
   return fetchRepoREST(owner, repo);
@@ -190,7 +277,7 @@ async function fetchRepoREST(
 
   const headers: Record<string, string> = {
     Accept: "application/vnd.github.v3+json",
-    "User-Agent": "AEROX-WAR/2.0",
+    "User-Agent": "AEROX-WAR/3.0",
   };
 
   const token = process.env.GITHUB_TOKEN;
@@ -282,7 +369,21 @@ async function fetchRepoREST(
     powerScore,
     language: repoData.language || "Unknown",
     forks: repoData.forks_count || 0,
+    // REST fallback: estimate battle stats
+    pushedAt: repoData.pushed_at || new Date().toISOString(),
+    commitHistory30d: commitVelocity * 4, // rough estimate from 7d
+    vulnerabilityAlerts: 0, // REST can't fetch this easily
+    mergedPRs: 0,
+    totalPRs: 0,
+    openBugs: Math.round(openIssues * 0.3), // estimate 30% are bugs
+    closedBugs: Math.round(closedIssues * 0.3),
+    mentionableUsers: Math.max(1, Math.round(Math.sqrt(repoData.stargazers_count || 0) * 0.5)),
+    starsToday: 0,
+    forksToday: 0,
   };
+
+  // Compute fairness score
+  stats.fairnessScore = computeFairnessScore(stats);
 
   setCache(cacheKey, stats);
   return stats;
@@ -293,12 +394,15 @@ function buildStats(r: Record<string, unknown>): RepoStats {
   const stars = (r.stargazerCount as number) || 0;
   const forks = (r.forkCount as number) || 0;
   const diskUsage = (r.diskUsage as number) || 0; // in KB
+  const pushedAt = (r.pushedAt as string) || new Date().toISOString();
 
-  // Commit velocity
+  // Commit velocity (7d and 30d)
   const defaultRef = r.defaultBranchRef as Record<string, unknown> | null;
   const target = defaultRef?.target as Record<string, unknown> | null;
-  const history = target?.history as { totalCount: number } | null;
-  const commitVelocity = history?.totalCount || 0;
+  const history7d = target?.history7d as { totalCount: number } | null;
+  const history30d = target?.history30d as { totalCount: number } | null;
+  const commitVelocity = history7d?.totalCount || 0;
+  const commitHistory30d = history30d?.totalCount || 0;
 
   // Issues
   const openObj = r.openIssues as { totalCount: number } | null;
@@ -310,6 +414,22 @@ function buildStats(r: Record<string, unknown>): RepoStats {
     openIssues === 0
       ? closedIssues > 0 ? 10 : 1
       : Math.min(closedIssues / openIssues, 10);
+
+  // Bugs
+  const openBugsObj = r.openBugs as { totalCount: number } | null;
+  const closedBugsObj = r.closedBugs as { totalCount: number } | null;
+  const openBugs = openBugsObj?.totalCount || 0;
+  const closedBugs = closedBugsObj?.totalCount || 0;
+
+  // Pull Requests
+  const mergedPRsObj = r.mergedPRs as { totalCount: number } | null;
+  const totalPRsObj = r.totalPRs as { totalCount: number } | null;
+  const mergedPRs = mergedPRsObj?.totalCount || 0;
+  const totalPRs = totalPRsObj?.totalCount || 0;
+
+  // Vulnerability Alerts
+  const vulnObj = r.vulnerabilityAlerts as { totalCount: number } | null;
+  const vulnerabilityAlerts = vulnObj?.totalCount || 0;
 
   // Contributors
   const mentionable = r.mentionableUsers as { totalCount: number } | null;
@@ -329,7 +449,7 @@ function buildStats(r: Record<string, unknown>): RepoStats {
   // Purely technical, merit-based power score (ignores popularity/stars)
   const powerScore = Math.round((complexityScore * 0.4) + (velocityScore * 0.3) + (healthScore * 0.3));
 
-  return {
+  const stats: RepoStats = {
     name: r.name as string,
     fullName: r.nameWithOwner as string,
     avatarUrl: ownerObj?.avatarUrl || "",
@@ -343,7 +463,23 @@ function buildStats(r: Record<string, unknown>): RepoStats {
     powerScore,
     language: lang?.name || "Unknown",
     forks,
+    // Battle Stats
+    pushedAt,
+    commitHistory30d,
+    vulnerabilityAlerts,
+    mergedPRs,
+    totalPRs,
+    openBugs,
+    closedBugs,
+    mentionableUsers: activeContributors,
+    starsToday: 0, // Would need separate historical API for precise delta
+    forksToday: 0,
   };
+
+  // Compute fairness score
+  stats.fairnessScore = computeFairnessScore(stats);
+
+  return stats;
 }
 
 // ── POST handler ──
@@ -382,12 +518,18 @@ export async function POST(request: NextRequest) {
       fetchRepoGraphQL(parsed2.owner, parsed2.repo),
     ]);
 
-    // Determine winner
+    // Determine winners
     let winner: "fighter1" | "fighter2" | "draw" = "draw";
     if (fighter1.powerScore > fighter2.powerScore) winner = "fighter1";
     else if (fighter2.powerScore > fighter1.powerScore) winner = "fighter2";
 
-    const response: RumbleResponse = { fighter1, fighter2, winner };
+    // Fair winner (from fairness algorithm)
+    const fairWinner = compareFairly(fighter1, fighter2);
+
+    const response: RumbleResponse = { fighter1, fighter2, winner, fairWinner };
+
+    // ── Thermal Overload Safeguard: cache last successful result ──
+    lastSuccessfulRumble = response;
 
     return NextResponse.json(response);
   } catch (error) {
@@ -397,6 +539,24 @@ export async function POST(request: NextRequest) {
     // Detect rate limit errors
     const isRateLimit = message.includes("RATE_LIMIT");
     const status = isRateLimit ? 429 : 500;
+
+    // ── Thermal Overload: Return simulated data on rate limit ──
+    if (isRateLimit && lastSuccessfulRumble) {
+      return NextResponse.json(
+        {
+          ...lastSuccessfulRumble,
+          isSimulated: true,
+          thermalOverload: {
+            isOverloaded: true,
+            requiresAuth: true,
+            message: message.replace("RATE_LIMIT: ", ""),
+          },
+          error: message.replace("RATE_LIMIT: ", ""),
+          isRateLimit: true,
+        },
+        { status: 200 } // Return 200 with simulated data
+      );
+    }
 
     return NextResponse.json(
       {

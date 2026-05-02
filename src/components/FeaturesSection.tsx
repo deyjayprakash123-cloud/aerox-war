@@ -6,13 +6,44 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/* ── SVG Icons (replacing emojis to prevent overlap) ── */
+const BrainIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6a00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.5 2a3.5 3.5 0 0 0-3.22 4.82A3.5 3.5 0 0 0 4 10.5a3.5 3.5 0 0 0 2.28 3.28A3.5 3.5 0 0 0 9.5 17.5h0" />
+    <path d="M14.5 2a3.5 3.5 0 0 1 3.22 4.82A3.5 3.5 0 0 1 20 10.5a3.5 3.5 0 0 1-2.28 3.28 3.5 3.5 0 0 1-3.22 3.72h0" />
+    <path d="M9.5 17.5v4.5" />
+    <path d="M14.5 17.5v4.5" />
+    <path d="M12 2v4" />
+    <path d="M12 10v4" />
+  </svg>
+);
+
+const BoltIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#shield-grad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <defs>
+      <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#ff6a00" />
+        <stop offset="100%" stopColor="#00e5ff" />
+      </linearGradient>
+    </defs>
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="M9 12l2 2 4-4" />
+  </svg>
+);
+
 interface Feature {
   title: string;
   description: string;
   value: number;
   label: string;
   color: "orange" | "cyan" | "mixed";
-  icon: string;
+  icon: React.ReactNode;
 }
 
 const features: Feature[] = [
@@ -23,7 +54,7 @@ const features: Feature[] = [
     value: 85,
     label: "COMPLEX",
     color: "orange",
-    icon: "🧠",
+    icon: <BrainIcon />,
   },
   {
     title: "Commit Velocity",
@@ -32,7 +63,7 @@ const features: Feature[] = [
     value: 92,
     label: "VELOCITY",
     color: "cyan",
-    icon: "⚡",
+    icon: <BoltIcon />,
   },
   {
     title: "Bug Stability",
@@ -41,7 +72,7 @@ const features: Feature[] = [
     value: 78,
     label: "STABILITY",
     color: "mixed",
-    icon: "🛡️",
+    icon: <ShieldIcon />,
   },
 ];
 
@@ -215,7 +246,10 @@ export default function FeaturesSection() {
             className="glass-card glow-border p-8 text-center"
             style={{ opacity: 0 }}
           >
-            <div className="text-3xl mb-4">{feature.icon}</div>
+            {/* Icon container — fixed dimensions, no overlap */}
+            <div className="feature-icon-container" style={{ marginBottom: "16px" }}>
+              {feature.icon}
+            </div>
 
             <RadialProgress
               value={feature.value}

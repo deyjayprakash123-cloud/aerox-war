@@ -23,6 +23,10 @@ const FeaturesSection = dynamic(
   () => import("@/components/FeaturesSection"),
   { ssr: false }
 );
+const FairEngineSection = dynamic(
+  () => import("@/components/FairEngineSection"),
+  { ssr: false }
+);
 
 export default function Home() {
   return (
@@ -54,6 +58,10 @@ export default function Home() {
         <FeaturesSection />
 
         <SectionDivider variant="orange" />
+
+        <FairEngineSection />
+
+        <SectionDivider variant="cyan" flip />
 
         <Footer />
       </main>

@@ -974,3 +974,255 @@ body {
 .view-toggle-btn:hover .view-toggle-label {
   color: rgba(255, 255, 255, 0.6);
 }
+
+/* ═══════════════════════════════════════════════════════
+   FEATURE ICON CONTAINERS (prevents overlap)
+   ═══════════════════════════════════════════════════════ */
+.feature-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════
+   TIMELINE ICON BOX (fixed dimensions, no overlap)
+   ═══════════════════════════════════════════════════════ */
+.timeline-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FAIR ENGINE SECTION
+   ═══════════════════════════════════════════════════════ */
+.fair-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 1px solid;
+  transition: all 0.3s ease;
+}
+
+.fair-weight-badge {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.fair-formula-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.03em;
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.fair-section-subtitle {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* ── Weight breakdown bars ── */
+.fair-bar-label {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  display: block;
+}
+
+.fair-bar-sub {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.03em;
+  display: block;
+  margin-top: 2px;
+}
+
+.fair-bar-value {
+  font-family: var(--font-heading);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.fair-bar-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.fair-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ── Event trigger cards ── */
+.fair-trigger-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid;
+  transition: all 0.3s ease;
+}
+
+.fair-trigger-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+}
+
+.fair-trigger-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  margin-bottom: 12px;
+}
+
+.fair-trigger-event {
+  font-family: var(--font-heading);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  margin-bottom: 4px;
+}
+
+.fair-trigger-effect {
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.fair-trigger-desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+  line-height: 1.5;
+}
+
+/* ── Thermal Overload safeguard ── */
+.fair-safeguard-item {
+  padding: 16px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.fair-safeguard-badge {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid;
+  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.fair-safeguard-text {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE — Fair Engine + Icon Overlap Fixes
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .fair-icon-box {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .fair-icon-box svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .feature-icon-container {
+    width: 48px;
+    height: 48px;
+  }
+
+  .feature-icon-container svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .timeline-icon-box {
+    width: 36px;
+    height: 36px;
+  }
+
+  .timeline-icon-box svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .fair-trigger-card {
+    padding: 16px 12px;
+  }
+
+  .fair-formula-tag {
+    font-size: 0.55rem;
+    word-break: break-all;
+  }
+
+  .fair-bar-sub {
+    display: none;
+  }
+}
