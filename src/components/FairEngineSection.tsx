@@ -292,7 +292,7 @@ export default function FairEngineSection() {
       </div>
 
       {/* ── 4 Pillar Cards ── */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+      <div className="max-w-5xl mx-auto equal-grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
         {pillars.map((pillar, i) => (
           <div
             key={i}
@@ -300,10 +300,10 @@ export default function FairEngineSection() {
             className="glass-card glow-border p-6"
             style={{ opacity: 0 }}
           >
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col items-center text-center gap-4 h-full card-content">
               {/* Icon */}
               <div
-                className="fair-icon-box"
+                className="fair-icon-box mx-auto"
                 style={{
                   color: colorMap[pillar.color],
                   borderColor: `${colorMap[pillar.color]}33`,
@@ -314,8 +314,8 @@ export default function FairEngineSection() {
               </div>
 
               {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <div className="flex-1 min-w-0 flex flex-col items-center">
+                <div className="flex items-center justify-center gap-3 mb-2 flex-wrap">
                   <h3
                     className="feature-title"
                     style={{ marginBottom: 0, fontSize: "1.05rem" }}
@@ -336,7 +336,7 @@ export default function FairEngineSection() {
                 <p className="feature-desc" style={{ maxWidth: "none", margin: 0, fontSize: "0.85rem" }}>
                   {pillar.description}
                 </p>
-                <div className="fair-formula-tag">
+                <div className="fair-formula-tag mt-auto">
                   {pillar.formula}
                 </div>
               </div>
@@ -346,7 +346,7 @@ export default function FairEngineSection() {
       </div>
 
       {/* ── Weight Breakdown Visualization ── */}
-      <div className="max-w-4xl mx-auto mb-16">
+      <div className="max-w-5xl mx-auto mb-20">
         <div className="glass-card p-8">
           <h3 className="fair-section-subtitle">
             Weighted Score Composition
@@ -391,7 +391,7 @@ export default function FairEngineSection() {
       </div>
 
       {/* ── Real-Time JSON Triggers ── */}
-      <div ref={triggersRef} className="max-w-4xl mx-auto mb-16" style={{ opacity: 0 }}>
+      <div ref={triggersRef} className="max-w-5xl mx-auto mb-20" style={{ opacity: 0 }}>
         <div className="glass-card p-8">
           <h3 className="fair-section-subtitle">
             Real-Time 3D Event Triggers
@@ -399,7 +399,7 @@ export default function FairEngineSection() {
           <p className="text-center text-white/35 text-sm mb-8" style={{ fontFamily: "var(--font-body)" }}>
             JSON changes from the GitHub API are mapped to cinematic 3D animations on the battle jets.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="equal-grid grid-cols-1 md:grid-cols-3 gap-6">
             {eventTriggers.map((trigger, i) => (
               <div
                 key={i}
@@ -427,7 +427,7 @@ export default function FairEngineSection() {
       </div>
 
       {/* ── Thermal Overload Safeguard ── */}
-      <div ref={thermalRef} className="max-w-4xl mx-auto" style={{ opacity: 0 }}>
+      <div ref={thermalRef} className="max-w-5xl mx-auto" style={{ opacity: 0 }}>
         <div
           className="glass-card p-8"
           style={{ borderColor: "rgba(255,77,0,0.15)" }}

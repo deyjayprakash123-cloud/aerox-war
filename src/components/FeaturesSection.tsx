@@ -6,9 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ── SVG Icons (replacing emojis to prevent overlap) ── */
+/* ── SVG Icons ── */
 const BrainIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6a00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff6a00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9.5 2a3.5 3.5 0 0 0-3.22 4.82A3.5 3.5 0 0 0 4 10.5a3.5 3.5 0 0 0 2.28 3.28A3.5 3.5 0 0 0 9.5 17.5h0" />
     <path d="M14.5 2a3.5 3.5 0 0 1 3.22 4.82A3.5 3.5 0 0 1 20 10.5a3.5 3.5 0 0 1-2.28 3.28 3.5 3.5 0 0 1-3.22 3.72h0" />
     <path d="M9.5 17.5v4.5" />
@@ -19,15 +19,15 @@ const BrainIcon = () => (
 );
 
 const BoltIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
   </svg>
 );
 
 const ShieldIcon = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="url(#shield-grad)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="url(#shield-grad-lg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <defs>
-      <linearGradient id="shield-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id="shield-grad-lg" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stopColor="#ff6a00" />
         <stop offset="100%" stopColor="#00e5ff" />
       </linearGradient>
@@ -113,8 +113,9 @@ function RadialProgress({
   }, [animated, value]);
 
   return (
-    <div className="radial-progress-container">
+    <div className="relative shrink-0 w-[160px] h-[160px] flex items-center justify-center">
       <svg
+        className="absolute inset-0"
         width="160"
         height="160"
         viewBox="0 0 160 160"
@@ -159,9 +160,9 @@ function RadialProgress({
         />
       </svg>
 
-      <div className="radial-value">
-        <span className="radial-number">{animated ? displayValue : 0}</span>
-        <span className="radial-label">{label}</span>
+      <div className="flex flex-col items-center justify-center z-10 relative">
+        <span className="radial-number leading-none">{animated ? displayValue : 0}</span>
+        <span className="radial-label mt-1">{label}</span>
       </div>
     </div>
   );
@@ -195,23 +196,22 @@ export default function FeaturesSection() {
         );
       }
 
-      // Cards
+      // Center-stacked Cards Smooth Scroll
       cardsRef.current.forEach((card, i) => {
         if (!card) return;
 
         gsap.fromTo(
           card,
-          { opacity: 0, y: 60, scale: 0.9 },
+          { opacity: 0, x: -40, scale: 0.98 },
           {
             opacity: 1,
-            y: 0,
+            x: 0,
             scale: 1,
-            duration: 0.8,
-            delay: i * 0.15,
-            ease: "power3.out",
+            duration: 1,
+            ease: "expo.out",
             scrollTrigger: {
               trigger: card,
-              start: "top 82%",
+              start: "top 85%",
               toggleActions: "play none none reverse",
               onEnter: () => setAnimated(true),
             },
@@ -226,7 +226,7 @@ export default function FeaturesSection() {
   return (
     <section ref={sectionRef} id="features" className="relative z-10 py-32 px-4">
       {/* Section heading */}
-      <div ref={headingRef} className="text-center mb-20">
+      <div ref={headingRef} className="text-center mb-24">
         <div className="section-tag">Battle Metrics</div>
         <h2 className="section-title">
           Health Scores & <span className="text-shimmer">Power Levels</span>
@@ -237,54 +237,66 @@ export default function FeaturesSection() {
         </p>
       </div>
 
-      {/* Feature cards */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* Feature cards - Stacked vertically in the middle */}
+      <div className="max-w-4xl mx-auto flex flex-col gap-8">
         {features.map((feature, i) => (
           <div
             key={i}
             ref={(el) => { cardsRef.current[i] = el; }}
-            className="glass-card glow-border p-8 text-center"
+            className="glass-card w-full p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 shadow-xl hover:shadow-[0_0_40px_rgba(0,229,255,0.1)] transition-all duration-500 hover:-translate-y-1 border border-white/5 hover:border-white/10"
             style={{ opacity: 0 }}
           >
-            {/* Icon container — fixed dimensions, no overlap */}
-            <div className="feature-icon-container" style={{ marginBottom: "16px" }}>
-              {feature.icon}
+            {/* Left side: Progress Ring */}
+            <div className="shrink-0 flex justify-center items-center">
+              <RadialProgress
+                value={feature.value}
+                color={feature.color}
+                label={feature.label}
+                animated={animated}
+              />
             </div>
 
-            <RadialProgress
-              value={feature.value}
-              color={feature.color}
-              label={feature.label}
-              animated={animated}
-            />
+            {/* Right side: Content */}
+            <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left mt-2 md:mt-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 text-white hidden md:block">
+                  {feature.icon}
+                </div>
+                <h3 className="font-heading font-bold text-xl md:text-2xl text-white tracking-wide">{feature.title}</h3>
+              </div>
+              
+              <p className="text-[0.95rem] text-white/60 leading-relaxed max-w-lg">
+                {feature.description}
+              </p>
 
-            <h3 className="feature-title">{feature.title}</h3>
-            <p className="feature-desc">{feature.description}</p>
-
-            {/* Bottom accent line */}
-            <div
-              className="mt-6 mx-auto h-px w-16"
-              style={{
-                background:
-                  feature.color === "orange"
-                    ? "linear-gradient(90deg, transparent, #ff6a00, transparent)"
-                    : feature.color === "cyan"
-                    ? "linear-gradient(90deg, transparent, #00e5ff, transparent)"
-                    : "linear-gradient(90deg, #ff6a00, transparent, #00e5ff)",
-              }}
-            />
+              {/* Accent line */}
+              <div
+                className="mt-6 h-[2px] w-16 opacity-70"
+                style={{
+                  background:
+                    feature.color === "orange"
+                      ? "linear-gradient(90deg, #ff6a00, transparent)"
+                      : feature.color === "cyan"
+                      ? "linear-gradient(90deg, #00e5ff, transparent)"
+                      : "linear-gradient(90deg, #ff6a00, #00e5ff)",
+                }}
+              />
+            </div>
           </div>
         ))}
       </div>
 
       {/* Power level bars */}
-      <div className="max-w-4xl mx-auto mt-20">
-        <div className="glass-card p-8">
+      <div className="max-w-4xl mx-auto mt-28">
+        <div className="glass-card p-8 md:p-10 shadow-2xl relative overflow-hidden border border-white/5">
+          <div className="absolute top-0 right-0 p-32 bg-neon-cyan/5 rounded-full blur-[100px] -z-10" />
+          <div className="absolute bottom-0 left-0 p-32 bg-neon-orange/5 rounded-full blur-[100px] -z-10" />
+
           <h3
-            className="text-center mb-8"
+            className="text-center mb-10"
             style={{
               fontFamily: "var(--font-heading)",
-              fontSize: "0.75rem",
+              fontSize: "0.85rem",
               letterSpacing: "0.2em",
               textTransform: "uppercase",
               color: "rgba(255,255,255,0.4)",
@@ -293,7 +305,7 @@ export default function FeaturesSection() {
             Sample Power Level Breakdown
           </h3>
 
-          <div className="space-y-6">
+          <div className="space-y-8">
             {[
               { label: "Code Complexity (Size & Depth)", value: 40, color: "#ff6a00" },
               { label: "Commit Velocity (Momentum)", value: 30, color: "#00e5ff" },
@@ -301,41 +313,41 @@ export default function FeaturesSection() {
               { label: "Popularity (Stars/Forks)", value: 0, color: "#ff2a2a" },
             ].map((bar, i) => (
               <div key={i}>
-                <div className="flex justify-between mb-2">
+                <div className="flex justify-between mb-3 px-1">
                   <span
-                    className="text-xs tracking-wider uppercase"
+                    className="text-xs tracking-widest uppercase font-bold"
                     style={{
                       fontFamily: "var(--font-heading)",
-                      color: "rgba(255,255,255,0.5)",
-                      fontSize: "0.65rem",
+                      color: "rgba(255,255,255,0.6)",
+                      fontSize: "0.7rem",
                     }}
                   >
                     {bar.label}
                   </span>
                   <span
-                    className="text-xs font-bold"
+                    className="text-xs font-bold drop-shadow-md"
                     style={{
                       fontFamily: "var(--font-heading)",
                       color: bar.color,
-                      fontSize: "0.7rem",
+                      fontSize: "0.75rem",
                     }}
                   >
                     {animated ? bar.value : 0}%
                   </span>
                 </div>
                 <div
-                  className="w-full h-1.5 rounded-full overflow-hidden"
+                  className="w-full h-2 rounded-full overflow-hidden"
                   style={{ background: "rgba(255,255,255,0.05)" }}
                 >
                   <div
                     className="h-full rounded-full"
                     style={{
                       width: animated ? `${bar.value}%` : "0%",
-                      background: `linear-gradient(90deg, ${bar.color}, ${bar.color}88)`,
-                      boxShadow: `0 0 10px ${bar.color}66`,
+                      background: `linear-gradient(90deg, ${bar.color}, ${bar.color}cc)`,
+                      boxShadow: `0 0 12px ${bar.color}88`,
                       transition:
                         "width 1.5s cubic-bezier(0.23, 1, 0.32, 1)",
-                      transitionDelay: `${i * 0.1}s`,
+                      transitionDelay: `${i * 0.15}s`,
                     }}
                   />
                 </div>
@@ -343,8 +355,8 @@ export default function FeaturesSection() {
             ))}
           </div>
 
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
-            <p className="text-[10px] text-white/40 uppercase tracking-widest" style={{ fontFamily: "var(--font-mono)" }}>
+          <div className="mt-10 pt-6 border-t border-white/10 text-center">
+            <p className="text-[0.65rem] text-white/40 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-mono)" }}>
               * Popularity metrics like GitHub Stars are explicitly excluded (0% weight) to ensure a pure test of technical engineering merit.
             </p>
           </div>

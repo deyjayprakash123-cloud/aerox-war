@@ -40,11 +40,11 @@ export default function Footer() {
     >
       <div className="footer-divider" />
 
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="max-w-5xl mx-auto px-6 py-16">
         {/* Top section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-12 text-center">
           {/* Brand */}
-          <div>
+          <div className="flex flex-col items-center">
             <div className="flex items-center gap-3 mb-4">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -88,6 +88,7 @@ export default function Footer() {
                 fontSize: "0.85rem",
                 color: "rgba(255,255,255,0.35)",
                 lineHeight: "1.7",
+                maxWidth: "280px",
               }}
             >
               The ultimate GitHub repository battle arena. Pit your code
@@ -96,7 +97,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="flex flex-col items-center">
             <h4
               style={{
                 fontFamily: "var(--font-heading)",
@@ -124,7 +125,7 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="flex flex-col items-center">
             <h4
               style={{
                 fontFamily: "var(--font-heading)",
@@ -141,7 +142,7 @@ export default function Footer() {
             <div className="space-y-3">
               <a
                 href="mailto:deyjayprakash123@gmail.com"
-                className="footer-link flex items-center gap-2"
+                className="footer-link flex items-center justify-center gap-2"
               >
                 <svg
                   width="14"
@@ -160,7 +161,7 @@ export default function Footer() {
                 href="https://instagram.com/jayy__hx"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="footer-link flex items-center gap-2"
+                className="footer-link flex items-center justify-center gap-2"
               >
                 <svg
                   width="14"

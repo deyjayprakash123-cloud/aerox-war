@@ -6,9 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ── SVG Icons (fixed dimensions, no overlap) ── */
+/* ── SVG Icons ── */
 const ScanIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6a00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6a00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8" />
     <path d="M21 21l-4.35-4.35" />
     <path d="M11 8v6" />
@@ -17,13 +17,13 @@ const ScanIcon = () => (
 );
 
 const DataIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
   </svg>
 );
 
 const RocketIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff6a00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ff6a00" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
     <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
     <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
@@ -32,7 +32,7 @@ const RocketIcon = () => (
 );
 
 const TrophyIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
     <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
     <path d="M4 22h16" />
@@ -110,16 +110,16 @@ export default function TimelineSection() {
         );
       }
 
-      // Timeline progress bar follows scroll
+      // Timeline progress bar follows scroll smoothly
       if (progressRef.current && sectionRef.current) {
         gsap.to(progressRef.current, {
           height: "100%",
           ease: "none",
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: "top 60%",
+            start: "top 40%",
             end: "bottom 40%",
-            scrub: 0.5,
+            scrub: 1, // Smooth scrub
           },
         });
       }
@@ -129,37 +129,48 @@ export default function TimelineSection() {
         if (!step) return;
 
         const dot = dotsRef.current[i];
-        const isLeft = i % 2 === 0;
 
-        // Step card fade in
         gsap.fromTo(
           step,
           {
-            opacity: 0.15,
-            x: isLeft ? -40 : 40,
-            y: 20,
+            opacity: 0,
+            x: 40,
+            scale: 0.98,
           },
           {
             opacity: 1,
             x: 0,
-            y: 0,
-            duration: 0.8,
-            ease: "power3.out",
+            scale: 1,
+            duration: 1,
+            ease: "expo.out",
             scrollTrigger: {
               trigger: step,
-              start: "top 75%",
-              end: "top 40%",
+              start: "top 85%",
               toggleActions: "play none none reverse",
               onEnter: () => {
-                step.classList.add("active");
                 if (dot) {
-                  dot.classList.add(i % 2 === 0 ? "active" : "active-cyan");
+                  gsap.to(dot, {
+                    scale: 1.4,
+                    backgroundColor: i % 2 === 0 ? "#ff6a00" : "#00e5ff",
+                    borderColor: i % 2 === 0 ? "#ff6a00" : "#00e5ff",
+                    boxShadow: i % 2 === 0 
+                      ? "0 0 20px rgba(255, 106, 0, 0.6)" 
+                      : "0 0 20px rgba(0, 229, 255, 0.6)",
+                    duration: 0.5,
+                    ease: "back.out(1.7)"
+                  });
                 }
               },
               onLeaveBack: () => {
-                step.classList.remove("active");
                 if (dot) {
-                  dot.classList.remove("active", "active-cyan");
+                  gsap.to(dot, {
+                    scale: 1,
+                    backgroundColor: "#12121c",
+                    borderColor: "rgba(255, 255, 255, 0.2)",
+                    boxShadow: "none",
+                    duration: 0.5,
+                    ease: "power2.in"
+                  });
                 }
               },
             },
@@ -174,7 +185,7 @@ export default function TimelineSection() {
   return (
     <section ref={sectionRef} id="how-it-works" className="relative z-10 py-32 px-4">
       {/* Section heading */}
-      <div ref={headingRef} className="text-center mb-20">
+      <div ref={headingRef} className="text-center mb-24">
         <div className="section-tag">How It Works</div>
         <h2 className="section-title">
           The Battle <span className="text-shimmer">Protocol</span>
@@ -185,41 +196,60 @@ export default function TimelineSection() {
         </p>
       </div>
 
-      {/* Timeline */}
-      <div className="timeline-container max-w-4xl mx-auto">
-        {/* Track */}
-        <div ref={trackRef} className="timeline-track" />
-        <div ref={progressRef} className="timeline-progress" style={{ height: 0 }} />
+      {/* Clean Timeline Layout */}
+      <div className="relative max-w-4xl mx-auto">
+        {/* Track Background */}
+        <div ref={trackRef} className="absolute left-[24px] md:left-[120px] top-0 bottom-0 w-px bg-white/10 z-0" />
+        
+        {/* Track Progress */}
+        <div 
+          ref={progressRef} 
+          className="absolute left-[24px] md:left-[120px] top-0 w-[3px] rounded-full bg-gradient-to-b from-neon-orange to-neon-cyan z-0 shadow-[0_0_12px_rgba(255,106,0,0.5)] -translate-x-[1px]" 
+          style={{ height: 0 }} 
+        />
 
         {/* Steps */}
-        <div className="space-y-32">
+        <div className="space-y-12 relative z-10 py-12">
           {steps.map((step, i) => {
-            const isLeft = i % 2 === 0;
-
             return (
-              <div key={i} className="relative">
-                {/* Dot on timeline */}
+              <div key={i} className="relative flex flex-col md:flex-row gap-6 md:gap-12 items-start pl-[64px] md:pl-0">
+                
+                {/* Dot */}
                 <div
                   ref={(el) => { dotsRef.current[i] = el; }}
-                  className="timeline-dot"
-                  style={{ top: "50%" }}
+                  className="absolute left-[24px] md:left-[120px] top-[28px] md:top-[44px] -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-[#12121c] border-2 border-white/20 z-20"
                 />
 
-                {/* Step card */}
+                {/* Left side (Desktop): Phase Number */}
+                <div className="hidden md:flex md:w-[90px] shrink-0 justify-end pt-9">
+                  <span className="font-heading text-xs font-bold tracking-[0.1em] uppercase text-white/50 text-right">
+                    {step.number}
+                  </span>
+                </div>
+
+                {/* Mobile Phase Number */}
+                <div className="md:hidden pt-2">
+                  <span className="font-heading text-xs font-bold tracking-[0.1em] uppercase text-white/50">
+                    {step.number}
+                  </span>
+                </div>
+
+                {/* Right side: Step card */}
                 <div
                   ref={(el) => { stepsRef.current[i] = el; }}
-                  className={`timeline-step ${isLeft ? "left" : "right"}`}
+                  className="flex-1 w-full"
                 >
-                  <div className="glass-card p-6 inline-block text-left max-w-md">
-                    <div className="flex items-center gap-3 mb-3">
-                      {/* SVG icon with fixed dimensions */}
-                      <div className="timeline-icon-box">
+                  <div className="glass-card p-6 md:p-8 text-left shadow-xl transition-all duration-300 hover:shadow-[0_0_30px_rgba(255,106,0,0.1)] group hover:-translate-y-1 border border-white/5 hover:border-white/10">
+                    <div className="flex items-center gap-4 mb-4">
+                      {/* Icon */}
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300">
                         {step.icon}
                       </div>
-                      <span className="step-number">{step.number}</span>
+                      <h3 className="font-heading font-bold text-xl md:text-2xl text-white tracking-wide">{step.title}</h3>
                     </div>
-                    <h3 className="step-title">{step.title}</h3>
-                    <p className="step-desc">{step.description}</p>
+                    <p className="text-[0.95rem] text-white/60 leading-relaxed">
+                      {step.description}
+                    </p>
                   </div>
                 </div>
               </div>

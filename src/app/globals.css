@@ -202,6 +202,24 @@ body {
     0 0 40px rgba(0, 229, 255, 0.06);
 }
 
+/* ── Equal-height grid card distribution ── */
+.equal-grid {
+  display: grid;
+  align-items: stretch;
+}
+
+.equal-grid > .glass-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.equal-grid > .glass-card > .card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ── Glow border variant ────────────── */
 .glow-border {
   position: relative;
@@ -544,8 +562,9 @@ body {
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.4);
   line-height: 1.6;
-  max-width: 280px;
+  max-width: 320px;
   margin: 0 auto;
+  flex: 1;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -595,9 +614,18 @@ body {
 .section-subtitle {
   font-size: 1rem;
   color: rgba(255, 255, 255, 0.4);
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
   line-height: 1.7;
+}
+
+/* ── Consistent section container ── */
+.section-container {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -735,6 +763,15 @@ body {
   .bokeh-orb:nth-child(2) {
     width: 250px;
     height: 250px;
+  }
+
+  .section-title {
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
+  }
+
+  .section-subtitle {
+    font-size: 0.9rem;
+    padding: 0 0.5rem;
   }
 }
 
@@ -1105,11 +1142,12 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 20px 16px;
+  padding: 24px 20px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid;
   transition: all 0.3s ease;
+  height: 100%;
 }
 
 .fair-trigger-card:hover {
@@ -1121,12 +1159,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.03);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .fair-trigger-event {
@@ -1134,7 +1172,7 @@ body {
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.15em;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .fair-trigger-effect {
@@ -1142,13 +1180,14 @@ body {
   font-size: 0.9rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .fair-trigger-desc {
   font-size: 0.75rem;
   color: rgba(255, 255, 255, 0.35);
   line-height: 1.5;
+  flex: 1;
 }
 
 /* ── Thermal Overload safeguard ── */
